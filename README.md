@@ -8,7 +8,17 @@ cp kubespray/blob/master/inventory/sample inventory
 Определим настройки кластера
 ./inventory
 
-3 Раскатываем роль:
+3 kube api server via nginx proxy
+файл настроек nginx.conf
+настройка роли inventory/group_vars/all/all.yml
+########
+apiserver_loadbalancer_domain_name: "api.test.local"
+loadbalancer_apiserver:
+  address: 10.128.0.29
+  port: 6443
+########
+
+4 Раскатываем роль:
 cd kubespray/
 cat requirements.txt
 sudo apt install sshpass
@@ -18,14 +28,14 @@ python3 get-pip.py
 pip install -r requirements.txt
 ansible-playbook kubespray/cluster.yml -e ansible_user=root -i inventory/prod/hosts.yaml -e kube_version=v1.21.9 -bKk
 
-4 После подняти кластера идем на масер ноду
+5 После подняти кластера идем на масер ноду
 	устанавливаем traefik(папка traefik)
   редактируем traefik.yml нужно установить айпи нашего nginx, traefik-dashboard.yml устанавливаем имя сервиса
 kubectl create -f crds
 kubectl create -n kube-system -f traefik.yml
 kubectl create -n kube-system -f traefik-dashboard.yml
 
-5 УСТАНОВКА kubernetes-dasboard
+6 УСТАНОВКА kubernetes-dasboard
 устанавливаем хельм
 curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
 chmod 700 get_helm.sh
@@ -42,7 +52,7 @@ kubectl create clusterrolebinding dashboard-admin-sa --clusterrole=cluster-admin
 Когда создаете serviceaccount, также создается токен, этот токен хранится в секретах, получаем токен
 kubectl describe secret dashboard-admin-sa-token-lmqdk -n kubernetes-dashboard
 
-6 Prometheus Grafana Alertmanager
+7 Prometheus Grafana Alertmanager
 Папка prom
 kubectl create -f crds/
 vi kube-prometheus-stack.yaml
@@ -51,15 +61,15 @@ kubectl create -f secret-etcd-certs.yaml
 Проверяем что все сервисы поднялись
 kubectl get po -n kube-system | grep prom
 
-7 Копируем 
+8 Копируем 
 psp-restricted.yaml 
 kubectl create -f psp-restricted.yaml 
 
-8 Поднятие Gitlab по официальной инструкции
+9 Поднятие Gitlab по официальной инструкции
 https://about.gitlab.com/install/
 https://computingforgeeks.com/how-to-install-gitlab-ce-on-ubuntu-linux/
 
-9 gitlab-runner 10.128.0.22
+10 gitlab-runner 10.128.0.22
 sudo apt-get update
 sudo apt-get upgrade
 sudo apt install apt-transport-https ca-certificates curl software-properties-common
@@ -106,7 +116,7 @@ check_interval = 0
 #########################
 gitlab-runner restart
 
-10 Установка helm на runner
+11 Установка helm на runner
 curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
 chmod 700 get_helm.sh
 ./get_helm.sh
@@ -127,3 +137,5 @@ git push
 Настройка Gitlab
 Заходим в проект Settings->CI/CD-> Runners (Set up a specific Runner manually) gitlab-runner register. (tags)
 Заходим в проект Settings->CI/CD-> Variables (DEPLOY_TOKEN_NEW, https://www.base64decode.org/ ENCODE master node .kube/config все содержимое о кластере
+
+
