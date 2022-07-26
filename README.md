@@ -101,7 +101,6 @@ check_interval = 0
     disable_entrypoint_overwrite = false
     oom_kill_disable = false
     disable_cache = false
-#    volumes = ["/cache"]
     volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache"]
     shm_size = 0
 #########################
