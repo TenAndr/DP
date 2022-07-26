@@ -17,3 +17,10 @@ python3 get-pip.py
 pip install -r requirements.txt
 ansible-playbook kubespray/cluster.yml -e ansible_user=root -i inventory/prod/hosts.yaml -e kube_version=v1.21.9 -bKk
 
+После подняти кластера идем на масер ноду
+	устанавливаем traefik(папка traefik)
+  редактируем traefik.yml нужно установить айпи нашего nginx, traefik-dashboard.yml устанавливаем имя сервиса
+kubectl create -f crds
+kubectl create -n kube-system -f traefik.yml
+kubectl create -n kube-system -f traefik-dashboard.yml
+
