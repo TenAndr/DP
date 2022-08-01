@@ -1,0 +1,50 @@
+image: docker:latest
+services:
+  - docker:latest
+
+stages:
+  - docker
+  - kuber
+
+variables:
+  ENV: "test"
+  CONTAINER_TAGGED_IMAGE: ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}
+  CONTAINER_LAST_IMAGE: ${CI_REGISTRY_IMAGE}:$ENV
+
+
+build_docker:
+  stage: docker
+  when: manual
+  only:
+    - master
+  tags:
+    - generic-new   
+  script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker build -f Dockerfile . -t $CONTAINER_TAGGED_IMAGE -t $CONTAINER_LAST_IMAGE
+    - docker push $CONTAINER_LAST_IMAGE
+
+kuber:
+  image: dtzar/helm-kubectl:3.8.1
+  stage: kuber
+  variables:
+    REPLICAS: 1
+  when: manual
+  environment:
+    name: ${ENV}
+  only:
+    - master
+  tags:
+    - generic-new
+
+  script:
+    - export NAMESPACE=test
+    - mkdir -p /etc/deploy
+    - echo ${DEPLOY_TOKEN_NEW} | base64 -d > /etc/deploy/config
+    - export KUBECONFIG=/etc/deploy/config
+    - export VALUES_FILE=.helm/values.yaml
+    - export HELM_PATH=.helm/
+    - cp $VALUES_FILE /tmp/input.yml
+    - envsubst < /tmp/input.yml > ${VALUES_FILE}
+    - helm template -f ${VALUES_FILE} ${HELM_PATH}
+    - helm upgrade --kubeconfig=/etc/deploy/config --set image.tag=test1 --install tentest .helm/ -f .helm/values.yaml --namespace $NAMESPACE --create-namespace

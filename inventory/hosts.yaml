@@ -1,0 +1,28 @@
+all:
+  hosts:
+    test-ten-k8s-m:
+      ansible_host: 10.128.0.33
+      ip: 10.128.0.33
+      access_ip: 10.128.0.33
+    test-ten-k8s-w:
+      ansible_host: 10.128.0.18
+      ip: 10.128.0.18
+      access_ip: 10.128.0.18
+  children:
+    kube-master:
+      hosts:
+        test-ten-k8s-m:
+    kube-node:
+      hosts:
+        test-ten-k8s-w1:
+    etcd:
+      hosts:
+        test-ten-k8s-m:
+    k8s-cluster:
+      children:
+        kube-master:
+        kube-node:
+    calico-rr:
+      hosts: {}
+
+
